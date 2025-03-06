@@ -1,0 +1,60 @@
+@startuml
+title Command Handler Class Diagram
+
+top to bottom direction
+
+interface DeviceManagerService {
+    +DeviceMetadata registerDevice(DeviceDto dto)
+    +DeviceMetadata getDeviceConfiguration(UUID deviceId)
+    +DeviceMetadata changeDeviceConfiguration(DeviceDto dto)
+    +void removeDevice(UUID deviceId)
+    +Boolean hasOwnership(Integer userId)
+}
+
+class DeviceManagerServiceImpl {
+    +DeviceRepository deviceRepository
+
+    +DeviceMetadata registerDevice(DeviceDto dto)
+    +DeviceMetadata getDeviceConfiguration(UUID deviceId)
+    +DeviceMetadata changeDeviceConfiguration(DeviceDto dto)
+    +void removeDevice(UUID deviceId)
+    +Boolean hasOwnership(Integer userId)
+}
+
+interface CommandHandlerService {
+    +void processCommand(Command command)
+}
+
+abstract class Command {
+    +BigInteger commandId
+    +UUID deviceId
+    +UUID triggeredBy
+    +Integer userId
+    +CommandType type
+    +String action
+}
+
+class SensorManagerFacade {
+   +Map<String, SensorProtocolManager> protocolManagerMap
+   +Boolean sendCommand(String data, Destination destination)
+}
+
+class Destination <<Device Connection Params>>{
+}
+
+class CommandHandlerImpl {
+    +DeviceManagerService managerService
+    +SensorManagerFacade sensorManager
+    +void processCommand(Command command)
+    -String encodeCommand(Command command)
+}
+
+DeviceManagerService  <|.. DeviceManagerServiceImpl: implements
+CommandHandlerService <|.. CommandHandlerImpl: implements
+CommandHandlerImpl o-- DeviceManagerService: used by
+CommandHandlerImpl o-- SensorManagerFacade: used by
+CommandHandlerImpl -- Command: parses and applies
+CommandHandlerImpl --> Destination: creates based on device configuration
+SensorManagerFacade --> Destination: Uses for command sending
+
+@enduml

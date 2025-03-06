@@ -1,0 +1,16 @@
+@startuml
+title Warm House Context Diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+Person(user, "User", "A user managing devices")
+System(WarmHouseSystem, "WarmHouse System", "System managing devices and showing its telemetry")
+System_Ext(Sensors, "Perception Layer", "System of sensors and edge devices collecting telemetry", $sprite=robot)
+System_Ext(NotificationSystems, "Notification System (email, mobile net, etc)")
+
+Rel(user, WarmHouseSystem, "View account, manage devices")
+Rel(WarmHouseSystem, Sensors, "Configure and get telemetry")
+Rel(WarmHouseSystem, NotificationSystems, "Send notification via")
+
+@enduml

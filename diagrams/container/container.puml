@@ -1,0 +1,63 @@
+@startuml
+
+title Warm House Container Diagram
+
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+Person(user, "User", "A user managing devices")
+
+System_Boundary(WarmHouseSystem, "WarmHouse System (SaaS)", "System managing devices and showing its telemetry") {
+   Container(UI, "Single Page application/Mobile application")
+   Container(Gateway, "API Gateway", "Google API Gateway")
+   Container(Auth, "Auth Service", "Keycloak", "Authorization via oauth2")
+   Container(Broker, "Message Broker", "Apache Kafka")
+   Boundary(DeviceManagement, "Device Management") {
+      Container(DeviceManagementSvc, "Device Management Service", "Java", "Manages devices, their registering and configurations")
+      ContainerDb(DmsDb, "Device Management Db", "PostgreSQL", "Stores device configurations, certificates and metadata")
+   }
+   Boundary(TelemetryProcessing, "Telemetry processing") {
+      Container(TelemetrySvc, "Telemetry Service", "Python", "Process raw telemetry data")
+      ContainerDb(TelemetryDb, "Telemetry DB", "InfluxDB", "Stores processed telemetry data as timeseries as separate CQRS views")
+   }
+   Boundary(TelemetryAnalytic, "Telemetry analysis") {
+      Container(RuleSvc, "Rule Service", "Python", "Manages devices automation rules, applying alerting, alarming or trigger actions")
+      ContainerDb(RuleDb, "Rule DB", "MongoDB", "Stores automation rules for devices")
+   }
+   Container(IotGateway, "Iot Gateway", "Kafka Connect", "Set tls connection with devices, send telemetry to the cloud")
+   Container(NotificationSvc, "Notification Service", "Python", "Send notifications to user by email, sms, etc")
+   SystemQueue(RawTelemetryQ, "Raw telemetry topic", "Data from edge device")
+   SystemQueue(ProcessedTelemetryQ, "Processed telemetry topic")
+   SystemQueue(AlertingQ, "Alerting/Alarming data topic")
+   SystemQueue(CommandsQ, "Device commands topic")
+}
+
+System_Ext(Sensors, "Perception Layer", "System of sensors and edge devices collecting telemetry", $sprite=robot)
+System_Ext(NotificationSystems, "Notfication System (email, mobile net, etc)")
+
+Rel(user, UI, "View account, manage devices")
+Rel(UI, Gateway, "Make ajax queries", "Rest API")
+Rel(Gateway, UI, "Real time updates", "WSS")
+Rel(Gateway, Auth, "Verify token, get user data", "Rest API")
+
+Rel(DeviceManagementSvc, DmsDb, "Stores in", "SQL")
+Rel(TelemetrySvc, TelemetryDb, "Stores in", "InfluxQL")
+Rel(RuleSvc, RuleDb, "Stores rules in", "MQL")
+
+Rel(Sensors, IotGateway, "Send telemetry preprocessed in edge devices", "MQTT/CoAP")
+Rel(IotGateway, RawTelemetryQ, "Direct raw data to kafka cluster")
+Rel(RawTelemetryQ, TelemetrySvc, "")
+Rel(TelemetrySvc, ProcessedTelemetryQ, "Publish processed data")
+Rel(ProcessedTelemetryQ, Gateway, "Apply data for real time updates")
+Rel(ProcessedTelemetryQ, RuleSvc, "Apply data for action triggering")
+Rel(RuleSvc, AlertingQ, "Send alerts based on telemetry values and user-defined rules")
+Rel(RuleSvc, CommandsQ, "Send commands to other devices based on rules and telemetry")
+Rel(AlertingQ, NotificationSvc, "Apply data for user notifications")
+Rel(NotificationSvc, NotificationSystems, "Send to")
+Rel(CommandsQ, DeviceManagementSvc, "Apply data to run commands")
+Rel(DeviceManagementSvc, Sensors, "Run command")
+Rel(Gateway, RuleSvc, "Post, update rules", "Rest API")
+Rel(Gateway, DeviceManagementSvc, "Post, update configuration, send commands, register devices", "Rest API")
+Rel(Gateway, TelemetrySvc, "Retrieve timeseries data", "Rest API")
+
+@enduml

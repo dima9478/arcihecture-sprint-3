@@ -1,0 +1,25 @@
+@startuml
+title Notification Service Diagram
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+Container_Boundary(NotificationSvc, "Notification Service") {
+   Component(AlertsConsumer, "Alert Consumer")
+   Component(NotificationHandlerFacade, "Notification Service Facade", "", "Apply notifications to all channels set up in configuration")
+   Component(EmailHandler, "Email Handler", "", "Send alerts via email")
+   Component(SMSHandler, "Sms Handler", "", "Send alerts via sms")
+   Component(..., "...")
+}
+
+ComponentQueue(AlertingQ, "Alerting/Alarming data topic")
+System_Ext(EmailSystem, "Email System")
+System_Ext(MobileSystem, "Mobile System")
+
+Rel(AlertingQ, AlertsConsumer, "Consume")
+Rel(AlertsConsumer, NotificationHandlerFacade, "Uses")
+Rel(NotificationHandlerFacade, EmailHandler, "Apply to")
+Rel(NotificationHandlerFacade, SMSHandler, "Apply to")
+Rel(NotificationHandlerFacade, ..., "Apply to")
+Rel(EmailHandler, EmailSystem, "Send to")
+Rel(SMSHandler, MobileSystem, "Send to")
+@enduml

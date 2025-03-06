@@ -1,0 +1,31 @@
+@startuml
+title Rule Service Diagram
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(Gateway, "API Gateway")
+Container_Boundary(RuleSvc, "Rule Management Service") {
+    Component(RuleController, "Rule controller", "", "Allow user to define algorithm for devices adjustment")
+    Component(RuleService, "Rule Service", "", "Create/update rules, get with cache mechanism")
+    Component(ProcessedTelemetryConsumer, "Processed telemetry consumer", "", "Kafka processed telemetry consumer")
+    Component(KafkaPublisher, "Kafka publisher", "", "Publisher for commands/notifications data")
+    Component(RuleProcessorFacade, "Rule Processor Facade", "", "Identify device rules for telemetry and make decisions")
+}
+
+ContainerDb(RuleDb, "Rule DB", "MongoDB", "Stores automation rules for devices")
+ComponentQueue(ProcessedTelemetryQ, "Processed telemetry topic")
+ComponentQueue(AlertingQ, "Alerting/Alarming data topic")
+ComponentQueue(CommandsQ, "Device commands topic")
+
+Rel(Gateway, RuleController, "Post/update device rule", "Rest API")
+Rel(RuleController, RuleService, "Uses")
+Rel(RuleService, RuleDb, "Stores")
+Rel(ProcessedTelemetryQ, ProcessedTelemetryConsumer, "Consume")
+Rel(ProcessedTelemetryConsumer, RuleProcessorFacade, "Uses")
+Rel(RuleProcessorFacade, RuleService, "Retrieve device rules for telemetry")
+Rel(RuleProcessorFacade, KafkaPublisher, "Uses")
+Rel(KafkaPublisher, AlertingQ, "Send alerts")
+Rel(KafkaPublisher, CommandsQ, "Send commands")
+
+@enduml
