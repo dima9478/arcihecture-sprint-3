@@ -8,18 +8,20 @@ Container_Boundary(NotificationSvc, "Notification Service") {
    Component(NotificationHandlerFacade, "Notification Service Facade", "", "Apply notifications to all channels set up in configuration")
    Component(EmailHandler, "Email Handler", "", "Send alerts via email")
    Component(SMSHandler, "Sms Handler", "", "Send alerts via sms")
-   Component(..., "...")
+   Component(WebPushHandler, "Web Push Handler", "", "Send push notification to user")
 }
 
 ComponentQueue(AlertingQ, "Alerting/Alarming data topic")
 System_Ext(EmailSystem, "Email System")
 System_Ext(MobileSystem, "Mobile System")
+System_Ext(WebPushAPI, "Web Push API", "Firebase Cloud Messaging")
 
 Rel(AlertingQ, AlertsConsumer, "Consume")
 Rel(AlertsConsumer, NotificationHandlerFacade, "Uses")
 Rel(NotificationHandlerFacade, EmailHandler, "Apply to")
 Rel(NotificationHandlerFacade, SMSHandler, "Apply to")
-Rel(NotificationHandlerFacade, ..., "Apply to")
+Rel(NotificationHandlerFacade, WebPushHandler, "Apply to")
 Rel(EmailHandler, EmailSystem, "Send to")
 Rel(SMSHandler, MobileSystem, "Send to")
+Rel(WebPushHandler, WebPushAPI, "Send to")
 @enduml

@@ -75,7 +75,7 @@ entity Notification {
     created_at: timestamp
 }
 
-User ||--|{ House
+User }|--|{ House
 House ||--|{ Device
 Device }o--|| DeviceType
 Device ||--o{ Telemetry
