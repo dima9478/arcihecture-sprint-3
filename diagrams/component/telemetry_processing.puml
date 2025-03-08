@@ -1,0 +1,29 @@
+@startuml
+title Telemetry Service Diagram
+top to bottom direction
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+Container(Gateway, "API Gateway")
+Container_Boundary(TelemetrySvc, "Telemetry Service") {
+    Component(TelemetryConsumer, "Telemetry Consumer", "", "Kafka telemetry consumer")
+    Component(TelemetryProcessorFacade, "Telemetry Processor Facade")
+    Component(ProcessedTelemetryPublisher, "Processed telemetry publisher", "", "Kafka processed telemetry publisher")
+    Component(TelemetryController, "Telemetry controller", "", "Allow user to watch telemetry of devices")
+    Component(TelemetryService, "Telemetry Service", "", "Return telemetry for specified period, has different interfaces for reads and writes")
+}
+
+ComponentQueue(RawTelemetryQ, "Raw telemetry topic", "Data from edge devices")
+ComponentQueue(ProcessedTelemetryQ, "Processed telemetry topic")
+ContainerDb(TelemetryDb, "Telemetry DB", "InfluxDB", "Stores processed telemetry data as timeseries as separate CQRS views")
+
+Rel(Gateway, TelemetryController, "Get telemetry", "Rest API")
+Rel(TelemetryController, TelemetryService, "Uses")
+Rel(TelemetryProcessorFacade, TelemetryService, "Save telemetry via write interface")
+Rel(RawTelemetryQ, TelemetryConsumer, "Obtain raw telemetry")
+Rel(TelemetryConsumer, TelemetryProcessorFacade, "Uses")
+Rel(TelemetryProcessorFacade, ProcessedTelemetryPublisher, "Publish data")
+Rel(ProcessedTelemetryPublisher, ProcessedTelemetryQ, "Publish processed data")
+
+Rel(TelemetryService, TelemetryDb, "Stores and reads data")
+@enduml
