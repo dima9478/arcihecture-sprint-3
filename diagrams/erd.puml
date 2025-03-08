@@ -16,7 +16,6 @@ entity User {
 entity House {
     * id: integer <<generated>>
     --
-    user_id: integer <<FK>>
     address: varchar
     name: varchar
     created_at: timestamp
